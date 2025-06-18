@@ -8,6 +8,14 @@ if [ -z "$1" ]; then
 fi
 
 VERSION=$1
+FILE_PATH="../krew-manifest.yaml"
+
+# Determine sed inline flag ('' on macOS, nothing on GNU)
+if [[ "$(uname)" == "Darwin" ]]; then
+    SED_INLINE=("-i" "")
+else
+    SED_INLINE=("-i")
+fi
 REPO="helmcode/kubectl-ai"
 
 echo "Updating krew-manifest.yaml for version $VERSION..."
@@ -19,37 +27,37 @@ get_sha256() {
 }
 
 # Update version
-sed -i "s/version: .*/version: ${VERSION}/" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "s/version: .*/version: ${VERSION}/" ${FILE_PATH}
 
 # Update URLs
-sed -i "s|download/.*/kubectl-ai-|download/${VERSION}/kubectl-ai-|g" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "s|download/.*/kubectl-ai-|download/${VERSION}/kubectl-ai-|g" ${FILE_PATH}
 
 # Update SHA256 checksums
 echo "Fetching SHA256 checksums..."
 
 # Linux AMD64
 SHA=$(get_sha256 "kubectl-ai-linux-amd64.tar.gz")
-sed -i "/os: linux/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/}" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "/os: linux/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/;}" ${FILE_PATH}
 
 # Linux ARM64
 SHA=$(get_sha256 "kubectl-ai-linux-arm64.tar.gz")
-sed -i "/os: linux/,/arch: arm64/{/sha256:/s/sha256: .*/sha256: ${SHA}/}" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "/os: linux/,/arch: arm64/{/sha256:/s/sha256: .*/sha256: ${SHA}/;}" ${FILE_PATH}
 
 # Darwin AMD64
 SHA=$(get_sha256 "kubectl-ai-darwin-amd64.tar.gz")
-sed -i "/os: darwin/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/}" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "/os: darwin/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/;}" ${FILE_PATH}
 
 # Darwin ARM64
 SHA=$(get_sha256 "kubectl-ai-darwin-arm64.tar.gz")
-sed -i "/os: darwin/,/arch: arm64/{/sha256:/s/sha256: .*/sha256: ${SHA}/}" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "/os: darwin/,/arch: arm64/{/sha256:/s/sha256: .*/sha256: ${SHA}/;}" ${FILE_PATH}
 
 # Windows AMD64
 SHA=$(get_sha256 "kubectl-ai-windows-amd64.exe.zip")
-sed -i "/os: windows/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/}" krew-manifest.yaml
+sed "${SED_INLINE[@]}" "/os: windows/,/arch: amd64/{/sha256:/s/sha256: .*/sha256: ${SHA}/;}" ${FILE_PATH}
 
 echo "✅ Updated krew-manifest.yaml for version $VERSION"
 echo ""
 echo "Next steps:"
-echo "1. Review the changes: git diff krew-manifest.yaml"
-echo "2. Test locally: kubectl krew install --manifest=krew-manifest.yaml"
+echo "1. Review the changes: git diff ${FILE_PATH}"
+echo "2. Test locally: kubectl krew install --manifest=${FILE_PATH}"
 echo "3. Submit to krew-index: https://github.com/kubernetes-sigs/krew-index"

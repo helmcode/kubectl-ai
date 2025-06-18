@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: ai
 spec:
-  version: v0.1.0
+  version: v0.1.1
   homepage: https://github.com/helmcode/kubectl-ai
   shortDescription: AI-powered Kubernetes debugging
   description: |
@@ -37,34 +37,34 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-linux-amd64.tar.gz
-    sha256: WILL_BE_UPDATED_AFTER_RELEASE
-    bin: kubectl-ai
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.1/kubectl-ai-linux-amd64.tar.gz
+    sha256: 9096ca657f775a3547f0ae474c6475bfec6e0e98d83266db9a61ad2b07bab877
+    bin: kubectl-ai-linux-amd64
   - selector:
       matchLabels:
         os: linux
         arch: arm64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-linux-arm64.tar.gz
-    sha256: WILL_BE_UPDATED_AFTER_RELEASE
-    bin: kubectl-ai
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.1/kubectl-ai-linux-arm64.tar.gz
+    sha256: 2341575f59db6b2aa6f7b8e8751c8a0c8031c1bcb08ee0ec5c9249a38e353cff
+    bin: kubectl-ai-linux-arm64
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-darwin-amd64.tar.gz
-    sha256: WILL_BE_UPDATED_AFTER_RELEASE
-    bin: kubectl-ai
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.1/kubectl-ai-darwin-amd64.tar.gz
+    sha256: c2bf3eb26b01280250766dac3bf3470065bda32440853381a8f8d20515fc4ac5
+    bin: kubectl-ai-darwin-amd64
   - selector:
       matchLabels:
         os: darwin
         arch: arm64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-darwin-arm64.tar.gz
-    sha256: WILL_BE_UPDATED_AFTER_RELEASE
-    bin: kubectl-ai
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.1/kubectl-ai-darwin-arm64.tar.gz
+    sha256: f2ccdfacd0a6c8c6b552e30a7747c6f326bbb06351d58cb2f8f43b8deb4a45db
+    bin: kubectl-ai-darwin-arm64
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-windows-amd64.exe.zip
-    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.1/kubectl-ai-windows-amd64.exe.zip
+    sha256: b84ac7bdf9961d6f7a39971791b06681a5336d34b98418e988eca8f6c1b5ee15
     bin: kubectl-ai.exe

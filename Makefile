@@ -66,7 +66,7 @@ build-all:
 release-dry-run:
 	goreleaser release --snapshot --clean
 
-# Quick test durante desarrollo
+# Quick test during development
 .PHONY: test-local
 test-local: build
 	./${BINARY_NAME} debug "test problem" -r deployment/nginx -n default
