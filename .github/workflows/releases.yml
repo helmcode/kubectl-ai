@@ -34,14 +34,17 @@ jobs:
 
             **macOS/Linux:**
             ```bash
-            # Download the binary for your platform
-            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubectl-ai-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+            # Detect platform
+            OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+            ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/;s/arm64/arm64/')
 
-            # Make it executable
-            chmod +x kubectl-ai-*
+            # Download and extract the tarball
+            curl -LO "https://github.com/helmcode/kubectl-ai/releases/download/${{ github.ref_name }}/kubectl-ai-${OS}-${ARCH}.tar.gz"
+            tar -xzf kubectl-ai-${OS}-${ARCH}.tar.gz
 
-            # Move to your PATH
-            sudo mv kubectl-ai-* /usr/local/bin/kubectl-ai
+            # Make it executable and move to your PATH
+            chmod +x kubectl-ai-${OS}-${ARCH}
+            sudo mv kubectl-ai-${OS}-${ARCH} /usr/local/bin/kubectl-ai
             ```
 
             **Windows:**

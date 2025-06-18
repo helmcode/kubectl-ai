@@ -3,6 +3,7 @@ package formatter
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/fatih/color"
@@ -88,7 +89,7 @@ func displayHuman(analysis *model.Analysis) {
 			}
 
 			if suggestion.Explanation != "" {
-				fmt.Printf("      Why: %s\n", suggestion.Explanation)
+				fmt.Println(wrapText("Why: "+sanitizeText(suggestion.Explanation), 80, "      "))
 			}
 			fmt.Println()
 		}
@@ -96,7 +97,7 @@ func displayHuman(analysis *model.Analysis) {
 
 	if analysis.FullAnalysis != "" {
 		white.Println("📄 DETAILED ANALYSIS:")
-		fmt.Println(wrapText(analysis.FullAnalysis, 80, "   "))
+		fmt.Println(wrapText(sanitizeText(analysis.FullAnalysis), 80, "   "))
 		fmt.Println()
 	}
 	fmt.Println(strings.Repeat("─", 80))
@@ -144,6 +145,13 @@ func getPriorityIcon(priority string) string {
 	default:
 		return "•"
 	}
+}
+
+// sanitizeText removes markdown code fences to keep output clean
+func sanitizeText(text string) string {
+    // Remove ```json, ```yaml, ``` and matching closing fences
+    re := regexp.MustCompile("```[a-zA-Z]*\n|```")
+    return re.ReplaceAllString(text, "")
 }
 
 func wrapText(text string, width int, indent string) string {
