@@ -49,7 +49,7 @@ Examples:
 
 	// Flags
 	if home := homedir.HomeDir(); home != "" {
-		cmd.Flags().StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "Path to kubeconfig file")
+		cmd.Flags().StringVar(&kubeconfig, "kubeconfig", "~/.kube/config", "Path to kubeconfig file")
 	}
 
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Kubernetes namespace")
@@ -82,6 +82,13 @@ func runDebug(cmd *cobra.Command, args []string) error {
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Suffix = " Connecting to Kubernetes cluster..."
 	s.Start()
+
+	// Expand home symbol in kubeconfig if needed
+	if strings.HasPrefix(kubeconfig, "~/") {
+	    if homeDir, err := os.UserHomeDir(); err == nil {
+	        kubeconfig = filepath.Join(homeDir, kubeconfig[2:])
+	    }
+	}
 
 	// Initialize K8s client
 	k8sClient, err := k8s.NewClient(kubeconfig)

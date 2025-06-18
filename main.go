@@ -29,6 +29,9 @@ configuration issues, performance problems, and provide recommendations.`,
 		SilenceUsage: true,
 	}
 
+	// Disable automatic 'completion' command added by cobra
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+
 	// Add subcommands
 	rootCmd.AddCommand(
 		cmd.NewDebugCmd(),
