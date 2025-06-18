@@ -1,0 +1,70 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: ai
+spec:
+  version: v0.1.0
+  homepage: https://github.com/helmcode/kubectl-ai
+  shortDescription: AI-powered Kubernetes debugging
+  description: |
+    This plugin uses AI (Claude) to analyze Kubernetes resources and help debug
+    configuration issues, performance problems, and provide actionable recommendations.
+
+    Features:
+    - Analyze any Kubernetes resource (native or CRD)
+    - Get root cause analysis for issues
+    - Receive actionable fix commands
+    - Support for multiple output formats (human, json, yaml)
+
+    Examples:
+      # Debug a crashing deployment
+      kubectl ai debug "pods are crashing" -r deployment/nginx
+
+      # Analyze multiple resources
+      kubectl ai debug "secrets not updating" -r deployment/vault -r vaultstaticsecret/creds
+
+      # Debug all resources in a namespace
+      kubectl ai debug "high memory usage" -n production --all
+  caveats: |
+    This plugin requires an Anthropic API key to function.
+
+    Before using, set your API key:
+      export ANTHROPIC_API_KEY="your-api-key"
+
+    Get your API key at: https://console.anthropic.com/
+  platforms:
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-linux-amd64.tar.gz
+    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    bin: kubectl-ai
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-linux-arm64.tar.gz
+    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    bin: kubectl-ai
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-darwin-amd64.tar.gz
+    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    bin: kubectl-ai
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-darwin-arm64.tar.gz
+    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    bin: kubectl-ai
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.0/kubectl-ai-windows-amd64.exe.zip
+    sha256: WILL_BE_UPDATED_AFTER_RELEASE
+    bin: kubectl-ai.exe

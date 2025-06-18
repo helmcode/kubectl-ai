@@ -1,0 +1,163 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+          body: |
+            ## kubectl-ai ${{ github.ref_name }}
+
+            AI-powered Kubernetes debugging plugin.
+
+            ### Installation
+
+            **macOS/Linux:**
+            ```bash
+            # Download the binary for your platform
+            curl -LO https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/kubectl-ai-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+
+            # Make it executable
+            chmod +x kubectl-ai-*
+
+            # Move to your PATH
+            sudo mv kubectl-ai-* /usr/local/bin/kubectl-ai
+            ```
+
+            **Windows:**
+            Download `kubectl-ai-windows-amd64.exe` and add to your PATH.
+
+            ### Usage
+            ```bash
+            export ANTHROPIC_API_KEY="your-api-key"
+            kubectl ai debug "pods crashing" -r deployment/nginx
+            ```
+
+  build:
+    name: Build and Upload
+    needs: release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            name: kubectl-ai-linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            name: kubectl-ai-linux-arm64
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: amd64
+            name: kubectl-ai-darwin-amd64
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: arm64
+            name: kubectl-ai-darwin-arm64
+          - os: ubuntu-latest
+            goos: windows
+            goarch: amd64
+            name: kubectl-ai-windows-amd64.exe
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION=$(echo ${GITHUB_REF} | sed 's/refs\/tags\///')
+          go build -ldflags="-X main.version=${VERSION}" -o ${{ matrix.name }} .
+
+      - name: Create tar.gz (non-Windows)
+        if: matrix.goos != 'windows'
+        run: |
+          tar -czf ${{ matrix.name }}.tar.gz ${{ matrix.name }}
+
+      - name: Create zip (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          zip ${{ matrix.name }}.zip ${{ matrix.name }}
+
+      - name: Upload Release Asset (tar.gz)
+        if: matrix.goos != 'windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.tar.gz
+          asset_name: ${{ matrix.name }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset (zip)
+        if: matrix.goos == 'windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.zip
+          asset_name: ${{ matrix.name }}.zip
+          asset_content_type: application/zip
+
+      - name: Calculate SHA256
+        run: |
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            sha256sum ${{ matrix.name }}.zip > ${{ matrix.name }}.zip.sha256
+          else
+            sha256sum ${{ matrix.name }}.tar.gz > ${{ matrix.name }}.tar.gz.sha256
+          fi
+        shell: bash
+
+      - name: Upload SHA256 (tar.gz)
+        if: matrix.goos != 'windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.tar.gz.sha256
+          asset_name: ${{ matrix.name }}.tar.gz.sha256
+          asset_content_type: text/plain
+
+      - name: Upload SHA256 (zip)
+        if: matrix.goos == 'windows'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.zip.sha256
+          asset_name: ${{ matrix.name }}.zip.sha256
+          asset_content_type: text/plain
