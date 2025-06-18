@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/helmcode/kubectl-ai/pkg/analyzer"
+	"github.com/helmcode/kubectl-ai/pkg/model"
 	"gopkg.in/yaml.v3"
 )
 
 // DisplayResults formats and displays the analysis results
-func DisplayResults(analysis *analyzer.Analysis, format string) error {
+func DisplayResults(analysis *model.Analysis, format string) error {
 	switch format {
 	case "json":
 		return displayJSON(analysis)
@@ -25,7 +25,7 @@ func DisplayResults(analysis *analyzer.Analysis, format string) error {
 	return nil
 }
 
-func displayJSON(analysis *analyzer.Analysis) error {
+func displayJSON(analysis *model.Analysis) error {
 	output, err := json.MarshalIndent(analysis, "", "  ")
 	if err != nil {
 		return err
@@ -34,7 +34,7 @@ func displayJSON(analysis *analyzer.Analysis) error {
 	return nil
 }
 
-func displayYAML(analysis *analyzer.Analysis) error {
+func displayYAML(analysis *model.Analysis) error {
 	output, err := yaml.Marshal(analysis)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func displayYAML(analysis *analyzer.Analysis) error {
 	return nil
 }
 
-func displayHuman(analysis *analyzer.Analysis) {
+func displayHuman(analysis *model.Analysis) {
 	// Colors
 	red := color.New(color.FgRed, color.Bold)
 	yellow := color.New(color.FgYellow, color.Bold)
@@ -52,16 +52,13 @@ func displayHuman(analysis *analyzer.Analysis) {
 	white := color.New(color.FgWhite, color.Bold)
 
 	fmt.Println()
-	
-	// Root Cause
+
 	red.Println("💡 ROOT CAUSE IDENTIFIED:")
 	fmt.Printf("   %s\n\n", analysis.RootCause)
 
-	// Severity
 	severityColor := getSeverityColor(analysis.Severity)
 	severityColor.Printf("📊 OVERALL SEVERITY: %s\n\n", strings.ToUpper(analysis.Severity))
 
-	// Issues found
 	if len(analysis.Issues) > 0 {
 		yellow.Println("⚠️  ISSUES FOUND:")
 		for i, issue := range analysis.Issues {
@@ -75,23 +72,21 @@ func displayHuman(analysis *analyzer.Analysis) {
 		}
 	}
 
-	// Quick Fix
 	if analysis.QuickFix != "" {
 		green.Println("🚀 QUICK FIX:")
 		fmt.Printf("   %s\n\n", color.GreenString(analysis.QuickFix))
 	}
 
-	// Suggestions
 	if len(analysis.Suggestions) > 0 {
 		cyan.Println("💡 SUGGESTIONS:")
 		for i, suggestion := range analysis.Suggestions {
 			priorityIcon := getPriorityIcon(suggestion.Priority)
 			fmt.Printf("   %d. %s %s\n", i+1, priorityIcon, suggestion.Action)
-			
+
 			if suggestion.Command != "" {
 				fmt.Printf("      Command: %s\n", color.CyanString(suggestion.Command))
 			}
-			
+
 			if suggestion.Explanation != "" {
 				fmt.Printf("      Why: %s\n", suggestion.Explanation)
 			}
@@ -99,14 +94,11 @@ func displayHuman(analysis *analyzer.Analysis) {
 		}
 	}
 
-	// Full Analysis (if verbose)
 	if analysis.FullAnalysis != "" {
 		white.Println("📄 DETAILED ANALYSIS:")
 		fmt.Println(wrapText(analysis.FullAnalysis, 80, "   "))
 		fmt.Println()
 	}
-
-	// Footer
 	fmt.Println(strings.Repeat("─", 80))
 	fmt.Printf("💡 %s\n", color.HiBlackString("Run with -o json or -o yaml for machine-readable output"))
 }
@@ -157,14 +149,14 @@ func getPriorityIcon(priority string) string {
 func wrapText(text string, width int, indent string) string {
 	var result strings.Builder
 	lines := strings.Split(text, "\n")
-	
+
 	for _, line := range lines {
 		words := strings.Fields(line)
 		if len(words) == 0 {
 			result.WriteString("\n")
 			continue
 		}
-		
+
 		currentLine := indent
 		for _, word := range words {
 			if len(currentLine)+len(word)+1 > width {
@@ -176,11 +168,11 @@ func wrapText(text string, width int, indent string) string {
 				currentLine += " " + word
 			}
 		}
-		
+
 		if currentLine != indent {
 			result.WriteString(currentLine + "\n")
 		}
 	}
-	
+
 	return strings.TrimSuffix(result.String(), "\n")
 }
