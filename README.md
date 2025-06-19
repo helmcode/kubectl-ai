@@ -39,7 +39,7 @@ cd kubectl-ai
 # build the binary for your OS/ARCH
 GOOS=$(uname -s | tr '[:upper:]' '[:lower:]') \
 GOARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') \
-go build -o kubectl-ai ./...
+go build
 # add it to PATH
 sudo mv kubectl-ai /usr/local/bin/
 ```

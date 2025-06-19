@@ -31,15 +31,22 @@ type Client struct {
 }
 
 // NewClient creates a new Kubernetes client with discovery capabilities
-func NewClient(kubeconfig string) (*Client, error) {
+// If contextName is not empty, it will be used instead of the current context in kubeconfig.
+func NewClient(kubeconfig string, contextName string) (*Client, error) {
 	var config *rest.Config
 	var err error
 
 	// Try in-cluster config first
 	config, err = rest.InClusterConfig()
 	if err != nil {
-		// Fall back to kubeconfig
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		// Fall back to kubeconfig with optional context override
+		loadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfig}
+		overrides := &clientcmd.ConfigOverrides{}
+		if contextName != "" {
+			overrides.CurrentContext = contextName
+		}
+		cfg := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, overrides)
+		config, err = cfg.ClientConfig()
 		if err != nil {
 			return nil, fmt.Errorf("failed to create config: %w", err)
 		}

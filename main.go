@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/helmcode/kubectl-ai/cmd"
+	"github.com/spf13/cobra"
 )
 
 var (
-	version = "dev" // Overwritten at build time
+	version = "v0.1.2" // Overwritten at build time
 )
 
 func main() {

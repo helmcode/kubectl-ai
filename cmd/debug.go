@@ -19,6 +19,7 @@ import (
 var (
 	kubeconfig string
 	namespace  string
+    kubeContext string
 	resources  []string
 	allResources bool
 	outputFormat string
@@ -53,6 +54,7 @@ Examples:
 	}
 
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Kubernetes namespace")
+    cmd.Flags().StringVar(&kubeContext, "context", "", "Kubeconfig context (overrides current-context)")
 	cmd.Flags().StringSliceVarP(&resources, "resource", "r", []string{}, "Resources to analyze (e.g., deployment/nginx, pod/nginx-xxx)")
 	cmd.Flags().BoolVar(&allResources, "all", false, "Analyze all resources in the namespace")
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "human", "Output format (human, json, yaml)")
@@ -91,7 +93,7 @@ func runDebug(cmd *cobra.Command, args []string) error {
 	}
 
 	// Initialize K8s client
-	k8sClient, err := k8s.NewClient(kubeconfig)
+	k8sClient, err := k8s.NewClient(kubeconfig, kubeContext)
 	if err != nil {
 		s.Stop()
 		return fmt.Errorf("failed to connect to cluster: %w", err)
