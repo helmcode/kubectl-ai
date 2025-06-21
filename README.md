@@ -67,6 +67,9 @@ sudo mv kubectl-ai-${OS}-${ARCH} /usr/local/bin/kubectl-ai
 git clone https://github.com/helmcode/kubectl-ai.git
 cd kubectl-ai
 kubectl krew install --manifest=krew-manifest.yaml
+
+# if you have kubectl-ai installed already, you can update it with
+kubectl krew install --manifest=krew-manifest.yaml --force
 ```
 
 ---
