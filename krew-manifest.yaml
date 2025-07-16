@@ -6,70 +6,54 @@ spec:
   version: v0.1.5
   homepage: https://github.com/helmcode/kubectl-ai
   shortDescription: AI-powered Kubernetes debugging
-  description: |
-    This plugin uses AI (Claude/OpenAI) to analyze Kubernetes resources and help debug
-    configuration issues, performance problems, and provide actionable recommendations.
-
-    Features:
-    - Analyze any Kubernetes resource (native or CRD)
-    - Get root cause analysis for issues
-    - Receive actionable fix commands
-    - Support for multiple output formats (human, json, yaml)
-    - Multiple LLM providers (Claude, OpenAI)
-
-    Examples:
-      # Debug a crashing deployment
-      kubectl ai debug "pods are crashing" -r deployment/nginx
-
-      # Analyze multiple resources
-      kubectl ai debug "secrets not updating" -r deployment/vault -r vaultstaticsecret/creds
-
-      # Debug all resources in a namespace
-      kubectl ai debug "high memory usage" -n production --all
-  caveats: |
-    This plugin requires an API key from either Anthropic or OpenAI to function.
-
-    For Claude (default):
-      export ANTHROPIC_API_KEY="your-api-key"
-      Get your API key at: https://console.anthropic.com/
-
-    For OpenAI:
-      export OPENAI_API_KEY="your-api-key"
-      export LLM_PROVIDER="openai"  # Optional: auto-detects from API key
-      Get your API key at: https://platform.openai.com/
+  description: "This plugin uses AI (Claude/OpenAI) to analyze Kubernetes resources\
+    \ and help debug\nconfiguration issues, performance problems, and provide actionable\
+    \ recommendations.\n\nFeatures:\n- Analyze any Kubernetes resource (native or\
+    \ CRD)\n- Get root cause analysis for issues\n- Receive actionable fix commands\n\
+    - Support for multiple output formats (human, json, yaml)\n- Multiple LLM providers\
+    \ (Claude, OpenAI)\n\nExamples:\n  # Debug a crashing deployment\n  kubectl ai\
+    \ debug \"pods are crashing\" -r deployment/nginx\n\n  # Analyze multiple resources\n\
+    \  kubectl ai debug \"secrets not updating\" -r deployment/vault -r vaultstaticsecret/creds\n\
+    \n  # Debug all resources in a namespace\n  kubectl ai debug \"high memory usage\"\
+    \ -n production --all\n"
+  caveats: "This plugin requires an API key from either Anthropic or OpenAI to function.\n\
+    \nFor Claude (default):\n  export ANTHROPIC_API_KEY=\"your-api-key\"\n  Get your\
+    \ API key at: https://console.anthropic.com/\n\nFor OpenAI:\n  export OPENAI_API_KEY=\"\
+    your-api-key\"\n  export LLM_PROVIDER=\"openai\"  # Optional: auto-detects from\
+    \ API key\n  Get your API key at: https://platform.openai.com/\n"
   platforms:
   - selector:
       matchLabels:
         os: linux
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.2/kubectl-ai-linux-amd64.tar.gz
-    sha256: 97367b54899e33ae97ab59aa0a276ab585904b9bcd30af42e6e87a9ccec167e0
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.5/kubectl-ai-linux-amd64.tar.gz
+    sha256: 8eda13d29f479ee50b55ece7c46d26a8e8812b6dbe172e3825fb628ac8101cbf
     bin: kubectl-ai-linux-amd64
   - selector:
       matchLabels:
         os: linux
         arch: arm64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.2/kubectl-ai-linux-arm64.tar.gz
-    sha256: d77ebc05c075952af1607924960cffa4375b794642ef87714a619f4accfcff1f
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.5/kubectl-ai-linux-arm64.tar.gz
+    sha256: 2038855b1588b8ed4840315bfb9f035b7544d4fd36b2d5298c4c678b2d56b5d6
     bin: kubectl-ai-linux-arm64
   - selector:
       matchLabels:
         os: darwin
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.2/kubectl-ai-darwin-amd64.tar.gz
-    sha256: 626540ae3cf925769dd38e31e6a388a341b10eee4b7cbda9f4dc342569dca205
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.5/kubectl-ai-darwin-amd64.tar.gz
+    sha256: 1050e68a49888d0f6c8a4afb3b57ec31eaddb60b1b7acd9c036ee38a67dce453
     bin: kubectl-ai-darwin-amd64
   - selector:
       matchLabels:
         os: darwin
         arch: arm64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.2/kubectl-ai-darwin-arm64.tar.gz
-    sha256: d77ebc05c075952af1607924960cffa4375b794642ef87714a619f4accfcff1f
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.5/kubectl-ai-darwin-arm64.tar.gz
+    sha256: 19abe393e707f4af93b2d192b956c3e794b5d991273f6f3b3f8f4c4c7a8cdddf
     bin: kubectl-ai-darwin-arm64
   - selector:
       matchLabels:
         os: windows
         arch: amd64
-    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.2/kubectl-ai-windows-amd64.exe.zip
-    sha256: 3667281afe68ae15fb1c6378bcdf48599dd90f2c76f8f653ba31ed463fbd32f7
+    uri: https://github.com/helmcode/kubectl-ai/releases/download/v0.1.5/kubectl-ai-windows-amd64.exe.zip
+    sha256: 9645fbd634ee852abcb96c212105cd78f5277b9011cb63cdfc775ea431df48e6
     bin: kubectl-ai.exe
