@@ -27,36 +27,36 @@ def get_sha256_from_url(url):
 
 def update_krew_manifest(version, repo="helmcode/kubectl-ai"):
     """Update krew-manifest.yaml with new version and SHA256 checksums"""
-    
+
     manifest_file = "krew-manifest.yaml"
-    
+
     if not os.path.exists(manifest_file):
         print(f"❌ {manifest_file} not found!")
         sys.exit(1)
-    
+
     # Load the manifest
     with open(manifest_file, 'r') as f:
         content = f.read()
-    
+
     print(f"🔄 Updating krew manifest for version {version}...")
-    
+
     # Update version
     content = re.sub(r'version: v[0-9]+\.[0-9]+\.[0-9]+', f'version: {version}', content)
-    
+
     # Update URLs
     content = re.sub(
         r'download/v[0-9]+\.[0-9]+\.[0-9]+/',
         f'download/{version}/',
         content
     )
-    
+
     # Parse YAML to update SHA256 checksums
     try:
         data = yaml.safe_load(content)
     except yaml.YAMLError as e:
         print(f"❌ Error parsing YAML: {e}")
         sys.exit(1)
-    
+
     # Platform to filename mapping
     platform_files = {
         ('linux', 'amd64'): 'kubectl-ai-linux-amd64.tar.gz',
@@ -65,30 +65,30 @@ def update_krew_manifest(version, repo="helmcode/kubectl-ai"):
         ('darwin', 'arm64'): 'kubectl-ai-darwin-arm64.tar.gz',
         ('windows', 'amd64'): 'kubectl-ai-windows-amd64.exe.zip'
     }
-    
+
     print("🔍 Calculating SHA256 checksums...")
-    
+
     # Update SHA256 for each platform
     for platform in data['spec']['platforms']:
         os_name = platform['selector']['matchLabels']['os']
         arch = platform['selector']['matchLabels']['arch']
-        
+
         if (os_name, arch) in platform_files:
             filename = platform_files[(os_name, arch)]
             url = f"https://github.com/{repo}/releases/download/{version}/{filename}"
-            
+
             # Get SHA256
             sha256 = get_sha256_from_url(url)
-            
+
             # Update the platform SHA256
             platform['sha256'] = sha256
-            
+
             print(f"✅ Updated {os_name}/{arch}: {sha256}")
-    
+
     # Write back to file
     with open(manifest_file, 'w') as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
-    
+
     print(f"✅ Krew manifest updated successfully!")
     print(f"📄 Updated file: {manifest_file}")
     return True
@@ -98,16 +98,16 @@ def main():
         print("Usage: python3 scripts/update-krew-manifest.py <version>")
         print("Example: python3 scripts/update-krew-manifest.py v0.1.3")
         sys.exit(1)
-    
+
     version = sys.argv[1]
-    
+
     # Validate version format
     if not re.match(r'v\d+\.\d+\.\d+', version):
         print("❌ Invalid version format. Use format: v0.1.3")
         sys.exit(1)
-    
+
     success = update_krew_manifest(version)
-    
+
     if success:
         print("")
         print("🎉 Krew manifest update completed!")
