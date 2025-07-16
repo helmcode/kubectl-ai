@@ -176,6 +176,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
+          ref: main
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -194,6 +195,9 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
+          # Ensure we're on main branch
+          git checkout main
           
           # Check if there are changes
           if git diff --quiet krew-manifest.yaml; then
