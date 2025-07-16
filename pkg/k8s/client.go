@@ -80,6 +80,11 @@ func NewClient(kubeconfig string, contextName string) (*Client, error) {
 	}, nil
 }
 
+// GetClientset returns the Kubernetes clientset for external access
+func (c *Client) GetClientset() *kubernetes.Clientset {
+	return c.clientset
+}
+
 // discoverResource finds any resource type in the cluster
 func (c *Client) discoverResource(resourceType string) (*metav1.APIResource, schema.GroupVersionResource, error) {
 	// Check cache first

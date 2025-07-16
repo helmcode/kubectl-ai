@@ -178,7 +178,7 @@ func printLLMInfo(llmClient llm.LLM) {
 		model = client.GetModel()
 	}
 
-	fmt.Printf("🤖 LLM Provider: %s (%s)\n", provider, model)
+	fmt.Printf("✓ LLM Provider: %s (%s)\n", provider, model)
 }
 
 func printSuccess(msg string) {

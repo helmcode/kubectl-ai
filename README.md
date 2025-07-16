@@ -13,6 +13,8 @@
 * ✅ **Understands the whole picture** – pods, deployments, services, CRDs, ingresses…
 * ✅ **Human or machine output** – pretty terminal format, or JSON / YAML for automation.
 * ✅ **Multiple LLM providers** – supports Claude (Anthropic) and OpenAI models.
+* ✅ **Metrics analysis** – visual charts and AI-powered insights from Prometheus data.
+* ✅ **Scaling recommendations** – intelligent HPA and KEDA configuration suggestions.
 
 ---
 
@@ -95,6 +97,12 @@ kubectl ai debug "secrets not updating" \
 # Analyse all resources in a namespace
 kubectl ai debug "high memory usage" -n production --all
 
+# Analyze metrics with visual charts
+kubectl ai metrics deployment/api -n production
+
+# Get AI-powered scaling recommendations
+kubectl ai metrics deployment/backend --analyze --hpa-analysis
+
 # Output as JSON
 kubectl ai debug "slow startup" -r deployment/api -o json
 
@@ -115,14 +123,86 @@ kubectl ai debug "storage issues" -r deployment/app --provider claude --model cl
 
 ---
 
+## 📊 Metrics Analysis
+
+The `kubectl ai metrics` command provides comprehensive metrics analysis with visual charts and AI-powered insights.
+
+### Basic Metrics Visualization
+
+```bash
+# Show basic metrics charts for a deployment
+kubectl ai metrics deployment/backend -n production
+
+# Show metrics for specific duration
+kubectl ai metrics deployment/api --duration 7d
+
+# Analyze all deployments in namespace
+kubectl ai metrics --all -n production
+```
+
+### AI-Powered Analysis
+
+```bash
+# Get AI analysis of metrics patterns
+kubectl ai metrics deployment/backend --analyze
+
+# Get HPA recommendations
+kubectl ai metrics deployment/api --hpa-analysis
+
+# Get KEDA scaling recommendations  
+kubectl ai metrics deployment/worker --keda-analysis
+
+# Combined analysis with all insights
+kubectl ai metrics deployment/app --analyze --hpa-analysis --keda-analysis
+```
+
+### Advanced Configuration
+
+```bash
+# Use specific Prometheus server
+kubectl ai metrics deployment/app --prometheus-url http://prometheus.monitoring:9090
+
+# Analyze with custom duration and specific provider
+kubectl ai metrics deployment/api --duration 30d --analyze --provider openai
+```
+
+### What You Get
+
+**📈 Visual Charts:**
+- CPU usage over time with statistics (avg, min, max)
+- Memory usage trends and patterns
+- Replica scaling events timeline
+
+**🤖 AI Analysis (with --analyze flag):**
+- Intelligent pattern recognition in metrics
+- Performance bottleneck identification
+- Scaling behavior analysis
+
+**🎯 HPA Recommendations (with --hpa-analysis flag):**
+- Optimal min/max replica settings
+- CPU/Memory target thresholds
+- Complete HPA YAML configuration
+
+**🚀 KEDA Recommendations (with --keda-analysis flag):**
+- Event-driven scaling configuration
+- Custom scalers for different workloads
+- Complete KEDA ScaledObject YAML
+
+**💡 Smart Recommendations:**
+- Prioritized action items (high/medium/low)
+- Resource optimization suggestions
+- Best practices for scaling configuration
+
+---
+
 ## 🔧 LLM Provider Configuration
 
 ### Claude (Anthropic) - Default
 
 ```bash
 export ANTHROPIC_API_KEY="sk-..."
-# Optional: specify model (default: claude-3-5-sonnet-20241022)
-export CLAUDE_MODEL="claude-3-5-sonnet-20241022"
+# Optional: specify model (default: claude-sonnet-4-20250514)
+export CLAUDE_MODEL="claude-sonnet-4-20250514"
 ```
 
 ### OpenAI
@@ -151,6 +231,8 @@ export LLM_PROVIDER="openai"
 
 ## 📋 Complete Command Reference
 
+### Debug Command
+
 ```bash
 kubectl ai debug PROBLEM [flags]
 
@@ -165,6 +247,30 @@ Flags:
   -v, --verbose           verbose output
       --provider string   LLM provider (claude, openai). Defaults to auto-detect from env
       --model string      LLM model to use (overrides default)
+```
+
+### Metrics Command
+
+```bash
+kubectl ai metrics RESOURCE [flags]
+
+Flags:
+  -h, --help                    help for metrics
+      --kubeconfig string       path to kubeconfig file (default "~/.kube/config")
+      --context string          kubeconfig context (overrides current-context)
+  -n, --namespace string        kubernetes namespace (default "default")
+  -r, --resource strings        resources to analyze (e.g., deployment/nginx)
+      --all                     analyze all deployments in the namespace
+  -o, --output string           output format (human, json, yaml) (default "human")
+  -v, --verbose                 verbose output
+      --provider string         LLM provider (claude, openai). Defaults to auto-detect from env
+      --model string            LLM model to use (overrides default)
+      --analyze                 perform AI analysis of metrics patterns
+      --duration string         duration for metrics analysis (1h, 6h, 24h, 7d, 30d) (default "24h")
+      --hpa-analysis            perform HPA-specific analysis
+      --keda-analysis           perform KEDA-specific analysis
+      --prometheus-url string   Prometheus server URL (auto-detects if not provided)
+      --prometheus-namespace    Prometheus namespace for auto-detection
 ```
 
 ---

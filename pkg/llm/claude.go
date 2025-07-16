@@ -19,7 +19,7 @@ func NewClaude(apiKey string) *Claude {
 	return &Claude{
 		apiKey: apiKey,
 		client: &http.Client{Timeout: 60 * time.Second},
-		model:  "claude-3-5-sonnet-20241022", // Updated to actual model
+		model:  "claude-sonnet-4-20250514",
 	}
 }
 
