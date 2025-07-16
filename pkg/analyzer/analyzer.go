@@ -53,3 +53,17 @@ func (a *Analyzer) Analyze(problem string, resources map[string]interface{}) (*m
 
 	return parser.ParseDebugResponse(rawResp, problem)
 }
+
+func (a *Analyzer) AnalyzeMetrics(resources map[string]interface{}, duration string, compareScaling, hpaAnalysis, kedaAnalysis bool) (*model.Analysis, error) {
+	prompt, err := prompts.BuildMetricsPrompt(resources, duration, compareScaling, hpaAnalysis, kedaAnalysis)
+	if err != nil {
+		return nil, err
+	}
+
+	rawResp, err := a.llm.Chat(prompt)
+	if err != nil {
+		return nil, fmt.Errorf("LLM chat: %w", err)
+	}
+
+	return parser.ParseMetricsResponse(rawResp, duration)
+}

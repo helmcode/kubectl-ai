@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -385,4 +387,254 @@ func containsStringIgnoreCase(slice []string, str string) bool {
 func hasSelector(obj *unstructured.Unstructured) bool {
 	_, found, _ := unstructured.NestedMap(obj.Object, "spec", "selector")
 	return found
+}
+
+// GatherMetricsResources collects resources and their metrics for analysis
+func (c *Client) GatherMetricsResources(namespace string, resources []string, allDeployments bool, duration string) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+
+	if allDeployments {
+		// Get all deployments and their metrics
+		if err := c.gatherAllDeploymentMetrics(namespace, result, duration); err != nil {
+			return nil, err
+		}
+	} else {
+		// Get specific resources and their metrics
+		for _, resource := range resources {
+			if err := c.gatherResourceMetrics(namespace, resource, result, duration); err != nil {
+				// Don't fail completely if one resource fails
+				fmt.Printf("Warning: failed to gather metrics for %s: %v\n", resource, err)
+			}
+		}
+	}
+
+	// Always add cluster metrics context
+	clusterMetrics, err := c.getClusterMetrics()
+	if err == nil {
+		result["cluster_metrics"] = clusterMetrics
+	}
+
+	// Add events
+	events, err := c.getEvents(namespace)
+	if err == nil && len(events.Items) > 0 {
+		result["events"] = events
+	}
+
+	return result, nil
+}
+
+func (c *Client) gatherResourceMetrics(namespace, resource string, result map[string]interface{}, duration string) error {
+	parts := strings.Split(resource, "/")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid resource format: %s (expected type/name)", resource)
+	}
+
+	resourceType := strings.ToLower(parts[0])
+	resourceName := parts[1]
+
+	// Get the resource itself
+	if err := c.gatherResource(namespace, resource, result); err != nil {
+		return err
+	}
+
+	// Get metrics for the resource
+	metrics, err := c.getResourceMetrics(namespace, resourceType, resourceName, duration)
+	if err != nil {
+		fmt.Printf("Warning: failed to gather metrics for %s: %v\n", resource, err)
+	} else {
+		result[resource+"_metrics"] = metrics
+	}
+
+	// Get HPA if exists
+	hpa, err := c.getHPAForResource(namespace, resourceType, resourceName)
+	if err == nil && hpa != nil {
+		result[resource+"_hpa"] = hpa
+	}
+
+	return nil
+}
+
+func (c *Client) gatherAllDeploymentMetrics(namespace string, result map[string]interface{}, duration string) error {
+	// Get all deployments
+	deployments, err := c.clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to list deployments: %w", err)
+	}
+
+	result["deployments"] = deployments
+
+	// Get metrics for each deployment
+	for _, deployment := range deployments.Items {
+		resourceKey := fmt.Sprintf("deployment/%s", deployment.Name)
+		
+		// Get metrics
+		metrics, err := c.getResourceMetrics(namespace, "deployment", deployment.Name, duration)
+		if err != nil {
+			fmt.Printf("Warning: failed to gather metrics for deployment %s: %v\n", deployment.Name, err)
+		} else {
+			result[resourceKey+"_metrics"] = metrics
+		}
+
+		// Get HPA if exists
+		hpa, err := c.getHPAForResource(namespace, "deployment", deployment.Name)
+		if err == nil && hpa != nil {
+			result[resourceKey+"_hpa"] = hpa
+		}
+
+		// Get related pods
+		pods, err := c.getPodsForDeployment(namespace, &deployment)
+		if err == nil && len(pods.Items) > 0 {
+			result[resourceKey+"_pods"] = pods
+		}
+	}
+
+	return nil
+}
+
+func (c *Client) getResourceMetrics(namespace, resourceType, resourceName, duration string) (map[string]interface{}, error) {
+	metrics := make(map[string]interface{})
+
+	// This is a simplified implementation - in a real scenario, you'd integrate with
+	// metrics systems like Prometheus, metrics-server, etc.
+	// For now, we'll collect basic resource information that can indicate metrics
+
+	switch resourceType {
+	case "deployment", "deploy", "deployments":
+		deployment, err := c.clientset.AppsV1().Deployments(namespace).Get(context.TODO(), resourceName, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+
+		// Get replica information
+		metrics["replicas"] = map[string]interface{}{
+			"desired":   deployment.Spec.Replicas,
+			"ready":     deployment.Status.ReadyReplicas,
+			"available": deployment.Status.AvailableReplicas,
+			"updated":   deployment.Status.UpdatedReplicas,
+		}
+
+		// Get resource requests/limits
+		if len(deployment.Spec.Template.Spec.Containers) > 0 {
+			container := deployment.Spec.Template.Spec.Containers[0]
+			if container.Resources.Requests != nil || container.Resources.Limits != nil {
+				metrics["resources"] = map[string]interface{}{
+					"requests": container.Resources.Requests,
+					"limits":   container.Resources.Limits,
+				}
+			}
+		}
+
+		// Get recent events for this deployment
+		events, err := c.getEventsForResource(namespace, "Deployment", resourceName)
+		if err == nil && len(events.Items) > 0 {
+			metrics["recent_events"] = events
+		}
+
+		// Get pod metrics
+		pods, err := c.getPodsForDeployment(namespace, deployment)
+		if err == nil {
+			podMetrics := make([]map[string]interface{}, 0)
+			for _, pod := range pods.Items {
+				podMetric := map[string]interface{}{
+					"name":           pod.Name,
+					"phase":          pod.Status.Phase,
+					"restarts":       getPodRestartCount(&pod),
+					"age":           time.Since(pod.CreationTimestamp.Time).String(),
+				}
+				podMetrics = append(podMetrics, podMetric)
+			}
+			metrics["pods"] = podMetrics
+		}
+
+	default:
+		return nil, fmt.Errorf("metrics not supported for resource type: %s", resourceType)
+	}
+
+	metrics["duration"] = duration
+	metrics["timestamp"] = time.Now().Format(time.RFC3339)
+
+	return metrics, nil
+}
+
+func (c *Client) getHPAForResource(namespace, resourceType, resourceName string) (*autoscalingv2.HorizontalPodAutoscaler, error) {
+	hpas, err := c.clientset.AutoscalingV2().HorizontalPodAutoscalers(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, hpa := range hpas.Items {
+		if hpa.Spec.ScaleTargetRef.Name == resourceName && 
+		   strings.ToLower(hpa.Spec.ScaleTargetRef.Kind) == resourceType {
+			return &hpa, nil
+		}
+	}
+
+	return nil, nil // No HPA found, not an error
+}
+
+func (c *Client) getClusterMetrics() (map[string]interface{}, error) {
+	metrics := make(map[string]interface{})
+
+	// Get cluster nodes
+	nodes, err := c.clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	nodeMetrics := make([]map[string]interface{}, 0)
+	for _, node := range nodes.Items {
+		nodeMetric := map[string]interface{}{
+			"name":     node.Name,
+			"status":   getNodeStatus(&node),
+			"capacity": node.Status.Capacity,
+			"allocatable": node.Status.Allocatable,
+		}
+		nodeMetrics = append(nodeMetrics, nodeMetric)
+	}
+	metrics["nodes"] = nodeMetrics
+
+	// Get cluster resource usage summary
+	metrics["cluster_summary"] = map[string]interface{}{
+		"total_nodes": len(nodes.Items),
+		"timestamp":   time.Now().Format(time.RFC3339),
+	}
+
+	return metrics, nil
+}
+
+func (c *Client) getEventsForResource(namespace, kind, name string) (*corev1.EventList, error) {
+	events, err := c.clientset.CoreV1().Events(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter events for the specific resource
+	filteredEvents := &corev1.EventList{}
+	for _, event := range events.Items {
+		if event.InvolvedObject.Kind == kind && event.InvolvedObject.Name == name {
+			filteredEvents.Items = append(filteredEvents.Items, event)
+		}
+	}
+
+	return filteredEvents, nil
+}
+
+func getPodRestartCount(pod *corev1.Pod) int32 {
+	var restarts int32
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		restarts += containerStatus.RestartCount
+	}
+	return restarts
+}
+
+func getNodeStatus(node *corev1.Node) string {
+	for _, condition := range node.Status.Conditions {
+		if condition.Type == corev1.NodeReady {
+			if condition.Status == corev1.ConditionTrue {
+				return "Ready"
+			}
+			return "NotReady"
+		}
+	}
+	return "Unknown"
 }

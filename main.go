@@ -35,6 +35,7 @@ configuration issues, performance problems, and provide recommendations.`,
 	// Add subcommands
 	rootCmd.AddCommand(
 		cmd.NewDebugCmd(),
+		cmd.NewMetricsCmd(),
 		newVersionCmd(),
 	)
 

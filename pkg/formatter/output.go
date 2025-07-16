@@ -26,6 +26,21 @@ func DisplayResults(analysis *model.Analysis, format string) error {
 	return nil
 }
 
+// DisplayMetrics formats and displays raw metrics data
+func DisplayMetrics(metricsData map[string]interface{}, format string) error {
+	switch format {
+	case "json":
+		return displayMetricsJSON(metricsData)
+	case "yaml":
+		return displayMetricsYAML(metricsData)
+	case "human":
+		fallthrough
+	default:
+		displayMetricsHuman(metricsData)
+	}
+	return nil
+}
+
 func displayJSON(analysis *model.Analysis) error {
 	output, err := json.MarshalIndent(analysis, "", "  ")
 	if err != nil {
@@ -183,4 +198,81 @@ func wrapText(text string, width int, indent string) string {
 	}
 
 	return strings.TrimSuffix(result.String(), "\n")
+}
+
+func displayMetricsJSON(metricsData map[string]interface{}) error {
+	output, err := json.MarshalIndent(metricsData, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
+}
+
+func displayMetricsYAML(metricsData map[string]interface{}) error {
+	output, err := yaml.Marshal(metricsData)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
+	return nil
+}
+
+func displayMetricsHuman(metricsData map[string]interface{}) {
+	// Colors
+	cyan := color.New(color.FgCyan, color.Bold)
+	yellow := color.New(color.FgYellow, color.Bold)
+	green := color.New(color.FgGreen, color.Bold)
+	white := color.New(color.FgWhite, color.Bold)
+
+	fmt.Println()
+	cyan.Println("📊 KUBERNETES METRICS OVERVIEW")
+	fmt.Println()
+
+	// Display deployments metrics
+	if deployments, ok := metricsData["deployments"]; ok {
+		yellow.Println("🚀 DEPLOYMENTS:")
+		displayDeploymentMetrics(deployments)
+	}
+
+	// Display individual resource metrics
+	for key, value := range metricsData {
+		if strings.HasSuffix(key, "_metrics") {
+			resourceName := strings.TrimSuffix(key, "_metrics")
+			green.Printf("📈 METRICS FOR %s:\n", strings.ToUpper(resourceName))
+			displayResourceMetrics(value)
+		}
+	}
+
+	// Display cluster metrics
+	if clusterMetrics, ok := metricsData["cluster_metrics"]; ok {
+		white.Println("🏢 CLUSTER METRICS:")
+		displayClusterMetrics(clusterMetrics)
+	}
+
+	fmt.Println(strings.Repeat("─", 80))
+	fmt.Printf("💡 %s\n", color.HiBlackString("Add --analyze flag for AI-powered analysis"))
+}
+
+func displayDeploymentMetrics(deployments interface{}) {
+	// This would display deployment list information
+	fmt.Printf("   %s\n", color.HiBlackString("Deployment metrics available"))
+}
+
+func displayResourceMetrics(metrics interface{}) {
+	if metricsMap, ok := metrics.(map[string]interface{}); ok {
+		for key, value := range metricsMap {
+			fmt.Printf("   %s: %v\n", key, value)
+		}
+	}
+	fmt.Println()
+}
+
+func displayClusterMetrics(clusterMetrics interface{}) {
+	if metricsMap, ok := clusterMetrics.(map[string]interface{}); ok {
+		for key, value := range metricsMap {
+			fmt.Printf("   %s: %v\n", key, value)
+		}
+	}
+	fmt.Println()
 }
