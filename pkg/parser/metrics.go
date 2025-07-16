@@ -31,10 +31,10 @@ func ParseMetricsResponse(raw string, duration string) (*model.Analysis, error) 
 			}},
 		}
 	}
-	
+
 	if analysis.Problem == "" {
 		analysis.Problem = fmt.Sprintf("Metrics Analysis (%s)", duration)
 	}
-	
+
 	return &analysis, nil
 }

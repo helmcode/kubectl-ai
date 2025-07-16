@@ -1,17 +1,17 @@
 package prompts
 
 import (
-    "encoding/json"
-    "fmt"
+	"encoding/json"
+	"fmt"
 )
 
 func BuildDebugPrompt(problem string, resources map[string]interface{}) (string, error) {
-    resourcesJSON, err := json.MarshalIndent(resources, "", "  ")
-    if err != nil {
-        return "", fmt.Errorf("marshal resources: %w", err)
-    }
+	resourcesJSON, err := json.MarshalIndent(resources, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("marshal resources: %w", err)
+	}
 
-    return fmt.Sprintf(`You are a Kubernetes expert helping to debug configuration issues.
+	return fmt.Sprintf(`You are a Kubernetes expert helping to debug configuration issues.
 
 User's Problem: %s
 

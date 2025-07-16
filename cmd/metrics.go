@@ -19,20 +19,20 @@ import (
 )
 
 var (
-	metricsKubeconfig      string
-	metricsNamespace       string
-	metricsKubeContext     string
-	metricsResources       []string
-	metricsAllDeployments  bool
-	metricsOutputFormat    string
-	metricsVerbose         bool
-	metricsLLMProvider     string
-	metricsLLMModel        string
-	metricsAnalyze         bool
-	metricsDuration        string
-	metricsCompareScaling  bool
-	metricsHPAAnalysis     bool
-	metricsKEDAAnalysis    bool
+	metricsKubeconfig     string
+	metricsNamespace      string
+	metricsKubeContext    string
+	metricsResources      []string
+	metricsAllDeployments bool
+	metricsOutputFormat   string
+	metricsVerbose        bool
+	metricsLLMProvider    string
+	metricsLLMModel       string
+	metricsAnalyze        bool
+	metricsDuration       string
+	metricsCompareScaling bool
+	metricsHPAAnalysis    bool
+	metricsKEDAAnalysis   bool
 )
 
 func NewMetricsCmd() *cobra.Command {
@@ -180,22 +180,22 @@ func printMetricsHeader(targetResource string, resources []string) {
 	cyan := color.New(color.FgCyan, color.Bold)
 	fmt.Println()
 	cyan.Println("📊 Kubernetes AI Metrics Analyzer")
-	
+
 	if targetResource != "" {
 		fmt.Printf("🎯 Target Resource: %s\n", targetResource)
 	}
-	
+
 	if len(resources) > 0 {
 		fmt.Printf("📋 Resources: %s\n", strings.Join(resources, ", "))
 	}
-	
+
 	fmt.Printf("📍 Namespace: %s\n", metricsNamespace)
 	fmt.Printf("⏱️  Duration: %s\n", metricsDuration)
-	
+
 	if metricsAllDeployments {
 		fmt.Println("🚀 Target: all deployments")
 	}
-	
+
 	var features []string
 	if metricsAnalyze {
 		features = append(features, "AI Analysis")
@@ -209,10 +209,10 @@ func printMetricsHeader(targetResource string, resources []string) {
 	if metricsKEDAAnalysis {
 		features = append(features, "KEDA Analysis")
 	}
-	
+
 	if len(features) > 0 {
 		fmt.Printf("🔧 Features: %s\n", strings.Join(features, ", "))
 	}
-	
+
 	fmt.Println()
 }

@@ -164,9 +164,9 @@ func getPriorityIcon(priority string) string {
 
 // sanitizeText removes markdown code fences to keep output clean
 func sanitizeText(text string) string {
-    // Remove ```json, ```yaml, ``` and matching closing fences
-    re := regexp.MustCompile("```[a-zA-Z]*\n|```")
-    return re.ReplaceAllString(text, "")
+	// Remove ```json, ```yaml, ``` and matching closing fences
+	re := regexp.MustCompile("```[a-zA-Z]*\n|```")
+	return re.ReplaceAllString(text, "")
 }
 
 func wrapText(text string, width int, indent string) string {

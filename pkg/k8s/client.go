@@ -466,7 +466,7 @@ func (c *Client) gatherAllDeploymentMetrics(namespace string, result map[string]
 	// Get metrics for each deployment
 	for _, deployment := range deployments.Items {
 		resourceKey := fmt.Sprintf("deployment/%s", deployment.Name)
-		
+
 		// Get metrics
 		metrics, err := c.getResourceMetrics(namespace, "deployment", deployment.Name, duration)
 		if err != nil {
@@ -536,10 +536,10 @@ func (c *Client) getResourceMetrics(namespace, resourceType, resourceName, durat
 			podMetrics := make([]map[string]interface{}, 0)
 			for _, pod := range pods.Items {
 				podMetric := map[string]interface{}{
-					"name":           pod.Name,
-					"phase":          pod.Status.Phase,
-					"restarts":       getPodRestartCount(&pod),
-					"age":           time.Since(pod.CreationTimestamp.Time).String(),
+					"name":     pod.Name,
+					"phase":    pod.Status.Phase,
+					"restarts": getPodRestartCount(&pod),
+					"age":      time.Since(pod.CreationTimestamp.Time).String(),
 				}
 				podMetrics = append(podMetrics, podMetric)
 			}
@@ -563,8 +563,8 @@ func (c *Client) getHPAForResource(namespace, resourceType, resourceName string)
 	}
 
 	for _, hpa := range hpas.Items {
-		if hpa.Spec.ScaleTargetRef.Name == resourceName && 
-		   strings.ToLower(hpa.Spec.ScaleTargetRef.Kind) == resourceType {
+		if hpa.Spec.ScaleTargetRef.Name == resourceName &&
+			strings.ToLower(hpa.Spec.ScaleTargetRef.Kind) == resourceType {
 			return &hpa, nil
 		}
 	}
@@ -584,9 +584,9 @@ func (c *Client) getClusterMetrics() (map[string]interface{}, error) {
 	nodeMetrics := make([]map[string]interface{}, 0)
 	for _, node := range nodes.Items {
 		nodeMetric := map[string]interface{}{
-			"name":     node.Name,
-			"status":   getNodeStatus(&node),
-			"capacity": node.Status.Capacity,
+			"name":        node.Name,
+			"status":      getNodeStatus(&node),
+			"capacity":    node.Status.Capacity,
 			"allocatable": node.Status.Allocatable,
 		}
 		nodeMetrics = append(nodeMetrics, nodeMetric)
