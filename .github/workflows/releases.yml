@@ -164,3 +164,50 @@ jobs:
           asset_path: ./${{ matrix.name }}.zip.sha256
           asset_name: ${{ matrix.name }}.zip.sha256
           asset_content_type: text/plain
+
+  update-krew-manifest:
+    name: Update Krew Manifest
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Install PyYAML
+        run: pip install PyYAML
+      
+      - name: Update krew manifest
+        run: |
+          VERSION=$(echo ${GITHUB_REF} | sed 's/refs\/tags\///')
+          python3 scripts/update-krew-manifest.py $VERSION
+      
+      - name: Commit and push updated manifest
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Check if there are changes
+          if git diff --quiet krew-manifest.yaml; then
+            echo "No changes to krew-manifest.yaml"
+          else
+            git add krew-manifest.yaml
+            git commit -m "Update krew manifest for ${GITHUB_REF##*/}
+
+            - Update version to ${GITHUB_REF##*/}
+            - Update download URLs for new release
+            - Update SHA256 checksums for all platforms
+            
+            🤖 Generated automatically by GitHub Actions"
+            
+            git push origin main
+            echo "✅ Krew manifest updated and pushed to main branch"
+          fi
