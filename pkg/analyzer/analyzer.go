@@ -1,20 +1,39 @@
 package analyzer
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/helmcode/kubectl-ai/pkg/llm"
-    "github.com/helmcode/kubectl-ai/pkg/parser"
-    "github.com/helmcode/kubectl-ai/pkg/prompts"
-    "github.com/helmcode/kubectl-ai/pkg/model"
+	"github.com/helmcode/kubectl-ai/pkg/llm"
+	"github.com/helmcode/kubectl-ai/pkg/model"
+	"github.com/helmcode/kubectl-ai/pkg/parser"
+	"github.com/helmcode/kubectl-ai/pkg/prompts"
 )
 
 type Analyzer struct {
-    llm llm.LLM
+	llm llm.LLM
 }
 
 func New(apiKey string) *Analyzer {
-    return &Analyzer{llm: llm.NewClaude(apiKey)}
+	// For backward compatibility, default to Claude
+	return &Analyzer{llm: llm.NewClaude(apiKey)}
+}
+
+func NewWithProvider(provider llm.Provider, config map[string]string) (*Analyzer, error) {
+	factory := llm.NewFactory()
+	llmInstance, err := factory.CreateLLM(provider, config)
+	if err != nil {
+		return nil, err
+	}
+	return &Analyzer{llm: llmInstance}, nil
+}
+
+func NewFromEnv() (*Analyzer, error) {
+	factory := llm.NewFactory()
+	llmInstance, err := factory.CreateFromEnv()
+	if err != nil {
+		return nil, err
+	}
+	return &Analyzer{llm: llmInstance}, nil
 }
 
 func NewWithLLM(l llm.LLM) *Analyzer {

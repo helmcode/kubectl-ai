@@ -6,24 +6,28 @@ import (
 	"strings"
 	"time"
 
+	"path/filepath"
+
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"github.com/helmcode/kubectl-ai/pkg/analyzer"
 	"github.com/helmcode/kubectl-ai/pkg/formatter"
 	"github.com/helmcode/kubectl-ai/pkg/k8s"
+	"github.com/helmcode/kubectl-ai/pkg/llm"
+	"github.com/spf13/cobra"
 	"k8s.io/client-go/util/homedir"
-	"path/filepath"
 )
 
 var (
-	kubeconfig string
-	namespace  string
-    kubeContext string
-	resources  []string
+	kubeconfig   string
+	namespace    string
+	kubeContext  string
+	resources    []string
 	allResources bool
 	outputFormat string
-	verbose    bool
+	verbose      bool
+	llmProvider  string
+	llmModel     string
 )
 
 func NewDebugCmd() *cobra.Command {
@@ -54,23 +58,19 @@ Examples:
 	}
 
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "default", "Kubernetes namespace")
-    cmd.Flags().StringVar(&kubeContext, "context", "", "Kubeconfig context (overrides current-context)")
+	cmd.Flags().StringVar(&kubeContext, "context", "", "Kubeconfig context (overrides current-context)")
 	cmd.Flags().StringSliceVarP(&resources, "resource", "r", []string{}, "Resources to analyze (e.g., deployment/nginx, pod/nginx-xxx)")
 	cmd.Flags().BoolVar(&allResources, "all", false, "Analyze all resources in the namespace")
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "human", "Output format (human, json, yaml)")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
+	cmd.Flags().StringVar(&llmProvider, "provider", "", "LLM provider (claude, openai). Defaults to auto-detect from env")
+	cmd.Flags().StringVar(&llmModel, "model", "", "LLM model to use (overrides default)")
 
 	return cmd
 }
 
 func runDebug(cmd *cobra.Command, args []string) error {
 	problem := args[0]
-
-	// Validate that we have API key
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return fmt.Errorf("ANTHROPIC_API_KEY environment variable not set")
-	}
 
 	// Validate inputs
 	if !allResources && len(resources) == 0 {
@@ -87,9 +87,9 @@ func runDebug(cmd *cobra.Command, args []string) error {
 
 	// Expand home symbol in kubeconfig if needed
 	if strings.HasPrefix(kubeconfig, "~/") {
-	    if homeDir, err := os.UserHomeDir(); err == nil {
-	        kubeconfig = filepath.Join(homeDir, kubeconfig[2:])
-	    }
+		if homeDir, err := os.UserHomeDir(); err == nil {
+			kubeconfig = filepath.Join(homeDir, kubeconfig[2:])
+		}
 	}
 
 	// Initialize K8s client
@@ -113,10 +113,27 @@ func runDebug(cmd *cobra.Command, args []string) error {
 	s.Stop()
 	printSuccess(fmt.Sprintf("Gathered %d resources", len(resourcesData)))
 
+	s.Suffix = " Initializing AI client..."
+	s.Start()
+
+	// Initialize LLM client using factory
+	llmClient, err := llm.CreateFromEnv(llmProvider, llmModel)
+	if err != nil {
+		s.Stop()
+		return fmt.Errorf("failed to initialize LLM client: %w", err)
+	}
+
+	s.Stop()
+	printSuccess("AI client initialized")
+
+	// Show LLM provider and model info
+	printLLMInfo(llmClient)
+	fmt.Println()
+
 	s.Suffix = " Analyzing with AI..."
 	s.Start()
 
-	aiAnalyzer := analyzer.New(apiKey)
+	aiAnalyzer := analyzer.NewWithLLM(llmClient)
 	analysis, err := aiAnalyzer.Analyze(problem, resourcesData)
 	if err != nil {
 		s.Stop()
@@ -144,6 +161,24 @@ func printHeader(problem string) {
 		fmt.Printf("📊 Resources: %s\n", strings.Join(resources, ", "))
 	}
 	fmt.Println()
+}
+
+func printLLMInfo(llmClient llm.LLM) {
+	// Get provider and model info from the LLM client
+	provider := "unknown"
+	model := "unknown"
+
+	// Type assertion to get provider and model information
+	switch client := llmClient.(type) {
+	case *llm.Claude:
+		provider = "claude"
+		model = client.GetModel()
+	case *llm.OpenAI:
+		provider = "openai"
+		model = client.GetModel()
+	}
+
+	fmt.Printf("🤖 LLM Provider: %s (%s)\n", provider, model)
 }
 
 func printSuccess(msg string) {

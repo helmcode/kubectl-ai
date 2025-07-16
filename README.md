@@ -12,6 +12,7 @@
 * ✅ **Actionable fixes** – concrete `kubectl` / `helm` commands you can copy-paste.
 * ✅ **Understands the whole picture** – pods, deployments, services, CRDs, ingresses…
 * ✅ **Human or machine output** – pretty terminal format, or JSON / YAML for automation.
+* ✅ **Multiple LLM providers** – supports Claude (Anthropic) and OpenAI models.
 
 ---
 
@@ -20,11 +21,18 @@
 ### 1. Prerequisites
 
 * Go 1.21+
-* An Anthropic **API key** exported as `ANTHROPIC_API_KEY`
+* An **API key** for your chosen LLM provider:
+  - **Claude (Anthropic)**: `ANTHROPIC_API_KEY`
+  - **OpenAI**: `OPENAI_API_KEY`
 * Access to the cluster you want to debug (via `kubectl` context)
 
 ```bash
+# For Claude (default)
 export ANTHROPIC_API_KEY="sk-..."
+
+# For OpenAI
+export OPENAI_API_KEY="sk-..."
+export LLM_PROVIDER="openai"  # Optional: auto-detects from API key
 ```
 
 ---
@@ -89,6 +97,74 @@ kubectl ai debug "high memory usage" -n production --all
 
 # Output as JSON
 kubectl ai debug "slow startup" -r deployment/api -o json
+
+# Use specific LLM provider
+kubectl ai debug "networking issues" -r deployment/app --provider openai
+
+# Use specific model
+kubectl ai debug "memory leaks" -r deployment/app --provider openai --model gpt-4o
+
+# Use environment variables to set provider and model
+export LLM_PROVIDER="openai"
+export OPENAI_MODEL="gpt-4o-mini"
+kubectl ai debug "performance issues" -r deployment/app
+
+# Override environment with command line flags
+kubectl ai debug "storage issues" -r deployment/app --provider claude --model claude-3-opus-20240229
+```
+
+---
+
+## 🔧 LLM Provider Configuration
+
+### Claude (Anthropic) - Default
+
+```bash
+export ANTHROPIC_API_KEY="sk-..."
+# Optional: specify model (default: claude-3-5-sonnet-20241022)
+export CLAUDE_MODEL="claude-3-5-sonnet-20241022"
+```
+
+### OpenAI
+
+```bash
+export OPENAI_API_KEY="sk-..."
+# Optional: specify model (default: gpt-4o)
+export OPENAI_MODEL="gpt-4o"
+# Optional: specify provider explicitly (auto-detects from API key if not set)
+export LLM_PROVIDER="openai"
+```
+
+### Configuration Priority
+
+1. **Command line flags** (`--provider`, `--model`) - highest priority
+2. **Environment variables** (`LLM_PROVIDER`, `OPENAI_MODEL`, `CLAUDE_MODEL`)
+3. **Auto-detection** - based on available API keys (Claude preferred if both available)
+
+### Command Line Options
+
+- `--provider`: Explicitly choose LLM provider (`claude`, `openai`)
+- `--model`: Override the default model for the selected provider
+- Auto-detection: If no provider is specified, the tool auto-detects based on available API keys
+
+---
+
+## 📋 Complete Command Reference
+
+```bash
+kubectl ai debug PROBLEM [flags]
+
+Flags:
+  -h, --help              help for debug
+      --kubeconfig string path to kubeconfig file (default "~/.kube/config")
+      --context string    kubeconfig context (overrides current-context)
+  -n, --namespace string  kubernetes namespace (default "default")
+  -r, --resource strings  resources to analyze (e.g., deployment/nginx, pod/nginx-xxx)
+      --all               analyze all resources in the namespace
+  -o, --output string     output format (human, json, yaml) (default "human")
+  -v, --verbose           verbose output
+      --provider string   LLM provider (claude, openai). Defaults to auto-detect from env
+      --model string      LLM model to use (overrides default)
 ```
 
 ---

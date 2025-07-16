@@ -3,11 +3,11 @@ kind: Plugin
 metadata:
   name: ai
 spec:
-  version: v0.1.2
+  version: v0.1.3
   homepage: https://github.com/helmcode/kubectl-ai
   shortDescription: AI-powered Kubernetes debugging
   description: |
-    This plugin uses AI (Claude) to analyze Kubernetes resources and help debug
+    This plugin uses AI (Claude/OpenAI) to analyze Kubernetes resources and help debug
     configuration issues, performance problems, and provide actionable recommendations.
 
     Features:
@@ -15,6 +15,7 @@ spec:
     - Get root cause analysis for issues
     - Receive actionable fix commands
     - Support for multiple output formats (human, json, yaml)
+    - Multiple LLM providers (Claude, OpenAI)
 
     Examples:
       # Debug a crashing deployment
@@ -26,12 +27,16 @@ spec:
       # Debug all resources in a namespace
       kubectl ai debug "high memory usage" -n production --all
   caveats: |
-    This plugin requires an Anthropic API key to function.
+    This plugin requires an API key from either Anthropic or OpenAI to function.
 
-    Before using, set your API key:
+    For Claude (default):
       export ANTHROPIC_API_KEY="your-api-key"
+      Get your API key at: https://console.anthropic.com/
 
-    Get your API key at: https://console.anthropic.com/
+    For OpenAI:
+      export OPENAI_API_KEY="your-api-key"
+      export LLM_PROVIDER="openai"  # Optional: auto-detects from API key
+      Get your API key at: https://platform.openai.com/
   platforms:
   - selector:
       matchLabels:
